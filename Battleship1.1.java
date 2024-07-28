@@ -2,8 +2,8 @@ import java.util.Random;
 import java.util.Scanner;
 
 public class Battleship {
-    public static final int SIZE = 10; // Adjust the board size if needed
-    public static final int[] SHIP_SIZES = {2, 3, 3, 4, 5}; // Different ship sizes
+    public static final int SIZE = 5;
+    public static final int NUMBER_OF_SHIPS = 3;
 
     public static void main(String[] args) {
         char[][] playerBoard = new char[SIZE][SIZE];
@@ -21,10 +21,10 @@ public class Battleship {
         placePlayerShips(playerShips, playerBoard, scanner);
 
         // Computer places ships
-        placeShipsRandomly(computerShips, SHIP_SIZES);
+        placeShipsRandomly(computerShips, NUMBER_OF_SHIPS);
 
-        int playerShipsRemaining = SHIP_SIZES.length;
-        int computerShipsRemaining = SHIP_SIZES.length;
+        int playerShipsRemaining = NUMBER_OF_SHIPS;
+        int computerShipsRemaining = NUMBER_OF_SHIPS;
 
         while (playerShipsRemaining > 0 && computerShipsRemaining > 0) {
             // Player's turn
@@ -90,88 +90,54 @@ public class Battleship {
     }
 
     public static void placePlayerShips(boolean[][] ships, char[][] board, Scanner scanner) {
-        for (int size : SHIP_SIZES) {
-            boolean placed = false;
-            while (!placed) {
-                int currentRow = 0;
-                int currentCol = 0;
-                boolean horizontal = true;
-                boolean valid = false;
-                while (!valid) {
-                    board[currentRow][currentCol] = 'P'; // 'P' for the current position
-                    printBoard(board);
+        int placedShips = 0;
+        int currentRow = 0;
+        int currentCol = 0;
 
-                    System.out.println("Place ship of size " + size + ". Use WASD to move, Enter to place, R to rotate:");
-                    char move = scanner.next().charAt(0);
-                    board[currentRow][currentCol] = '~';
+        while (placedShips < NUMBER_OF_SHIPS) {
+            board[currentRow][currentCol] = 'P'; // 'P' for the current position
+            printBoard(board);
 
-                    switch (move) {
-                        case 'w': currentRow = Math.max(0, currentRow - 1); break;
-                        case 'a': currentCol = Math.max(0, currentCol - 1); break;
-                        case 's': currentRow = Math.min(SIZE - 1, currentRow + 1); break;
-                        case 'd': currentCol = Math.min(SIZE - 1, currentCol + 1); break;
-                        case 'r': horizontal = !horizontal; break;
-                        case 't': // Enter key
-                        case '\r': // Enter key on some systems
-                        case ' ': // Space key for convenience
-                            valid = isValidPlacement(ships, currentRow, currentCol, size, horizontal);
-                            if (valid) {
-                                placeShip(ships, board, currentRow, currentCol, size, horizontal);
-                                placed = true;
-                            } else {
-                                System.out.println("Invalid placement. Try again.");
-                            }
-                            break;
-                        default:
-                            System.out.println("Invalid move. Use WASD to move, Enter to place, R to rotate.");
-                            break;
+            System.out.println("Place ship " + (placedShips + 1) + ". Use WASD to move, Enter to place:");
+            char move = scanner.next().charAt(0);
+            board[currentRow][currentCol] = '~';
+
+            switch (move) {
+                case 'w': currentRow = Math.max(0, currentRow - 1); break;
+                case 'a': currentCol = Math.max(0, currentCol - 1); break;
+                case 's': currentRow = Math.min(SIZE - 1, currentRow + 1); break;
+                case 'd': currentCol = Math.min(SIZE - 1, currentCol + 1); break;
+                case '\n': // Enter key
+                case '\r': // Enter key on some systems
+                case ' ': // Space key for convenience
+                    if (!ships[currentRow][currentCol]) {
+                        ships[currentRow][currentCol] = true;
+                        board[currentRow][currentCol] = 'S'; // 'S' for ship
+                        placedShips++;
+                    } else {
+                        System.out.println("There is already a ship here. Try again.");
                     }
-                }
+                    break;
+                default:
+                    System.out.println("Invalid move. Use WASD to move, Enter to place.");
+                    break;
             }
         }
+
+        // Clear the cursor after placing all ships
+        board[currentRow][currentCol] = '~';
+        printBoard(board);
     }
 
-    public static void placeShipsRandomly(boolean[][] ships, int[] shipSizes) {
+    public static void placeShipsRandomly(boolean[][] ships, int numberOfShips) {
         Random rand = new Random();
-        for (int size : shipSizes) {
-            boolean placed = false;
-            while (!placed) {
-                int row = rand.nextInt(SIZE);
-                int col = rand.nextInt(SIZE);
-                boolean horizontal = rand.nextBoolean();
-                if (isValidPlacement(ships, row, col, size, horizontal)) {
-                    placeShip(ships, null, row, col, size, horizontal);
-                    placed = true;
-                }
-            }
-        }
-    }
-
-    public static boolean isValidPlacement(boolean[][] ships, int row, int col, int size, boolean horizontal) {
-        if (horizontal) {
-            if (col + size > SIZE) return false;
-            for (int i = col; i < col + size; i++) {
-                if (ships[row][i]) return false;
-            }
-        } else {
-            if (row + size > SIZE) return false;
-            for (int i = row; i < row + size; i++) {
-                if (ships[i][col]) return false;
-            }
-        }
-        return true;
-    }
-
-    public static void placeShip(boolean[][] ships, char[][] board, int row, int col, int size, boolean horizontal) {
-        if (horizontal) {
-            for (int i = col; i < col + size; i++) {
-                ships[row][i] = true;
-                if (board != null) board[row][i] = 'S';
-            }
-        } else {
-            for (int i = row; i < row + size; i++) {
-                ships[i][col] = true;
-                if (board != null) board[i][col] = 'S';
+        int placedShips = 0;
+        while (placedShips < numberOfShips) {
+            int row = rand.nextInt(SIZE);
+            int col = rand.nextInt(SIZE);
+            if (!ships[row][col]) {
+                ships[row][col] = true;
+                placedShips++;
             }
         }
     }
