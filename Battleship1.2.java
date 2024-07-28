@@ -4,7 +4,7 @@
 * @verstion 1.2
 * My code is a game based on battleship.
 * This game is a two player game, which means it evolves two players to play this game in this game i used two players as computer and human. 
-* Use WASD to move the ship, R to rotate and T to place the ship after placing the 5 ships then enter the corden's to attack the opponents ships if you destroy all of the opponents ships before he destroy yours then you win the game.
+* Use WASD to move the ship, R to rotate and T to place the ship after placing the 5 ships then enter the coordinates to attack the opponents ships if you destroy all of the opponents ships before he destroy yours then you win the game.
 */
 import java.util.Random;//Keyboard scanner
 import java.util.Scanner;
