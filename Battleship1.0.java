@@ -1,9 +1,7 @@
-import java.util.Random;
-import java.util.Scanner;
-
 public class Battleship {
-    public static final int SIZE = 10; // Adjust the board size if needed
-    public static final int[] SHIP_SIZES = {2, 3, 3, 4, 5}; // Different ship sizes
+    public static final int SIZE = 9;
+    public static final int NUMBER_OF_SHIPS = 4;
+    public static final int SHIP_SIZE = 3; // Define the size of the ships
 
     public static void main(String[] args) {
         char[][] playerBoard = new char[SIZE][SIZE];
@@ -17,14 +15,14 @@ public class Battleship {
         Scanner scanner = new Scanner(System.in);
 
         // Player places ships
-        System.out.println("Place your ships using WASD keys and enter key (W: Up, A: Left, S: Down, D: Right, Enter: Place):");
+        System.out.println("Place your ships using WASD keys and T to Place the ships (W: Up, A: Left, S: Down, D: Right, T: Place):");
         placePlayerShips(playerShips, playerBoard, scanner);
 
         // Computer places ships
-        placeShipsRandomly(computerShips, SHIP_SIZES);
+        placeShipsRandomly(computerShips, NUMBER_OF_SHIPS);
 
-        int playerShipsRemaining = SHIP_SIZES.length;
-        int computerShipsRemaining = SHIP_SIZES.length;
+        int playerShipsRemaining = NUMBER_OF_SHIPS * SHIP_SIZE;
+        int computerShipsRemaining = NUMBER_OF_SHIPS * SHIP_SIZE;
 
         while (playerShipsRemaining > 0 && computerShipsRemaining > 0) {
             // Player's turn
@@ -46,7 +44,7 @@ public class Battleship {
                 computerBoard[row][col] = 'X';
                 computerShips[row][col] = false;
                 computerShipsRemaining--;
-                System.out.println("Hit! " + computerShipsRemaining + " ships remaining.");
+                System.out.println("Hit! " + computerShipsRemaining + " parts of ships remaining.");
             } else {
                 computerBoard[row][col] = 'O';
                 System.out.println("Miss.");
@@ -65,7 +63,7 @@ public class Battleship {
                 playerBoard[compRow][compCol] = 'X';
                 playerShips[compRow][compCol] = false;
                 playerShipsRemaining--;
-                System.out.println("Computer hit! " + playerShipsRemaining + " of your ships remaining.");
+                System.out.println("Computer hit! " + playerShipsRemaining + " parts of your ships remaining.");
             } else {
                 playerBoard[compRow][compCol] = 'O';
                 System.out.println("Computer miss.");
@@ -90,123 +88,137 @@ public class Battleship {
     }
 
     public static void placePlayerShips(boolean[][] ships, char[][] board, Scanner scanner) {
-        for (int size : SHIP_SIZES) {
+        int placedShips = 0;
+
+        while (placedShips < NUMBER_OF_SHIPS) {
+            int currentRow = 0;
+            int currentCol = 0;
             boolean placed = false;
             while (!placed) {
-                int currentRow = 0;
-                int currentCol = 0;
-                boolean horizontal = true;
-                boolean valid = false;
-                while (!valid) {
-                    board[currentRow][currentCol] = 'P'; // 'P' for the current position
-                    printBoard(board);
+                boolean validPlacement = true;
 
-                    System.out.println("Place ship of size " + size + ". Use WASD to move, Enter to place, R to rotate:");
-                    char move = scanner.next().charAt(0);
-                    board[currentRow][currentCol] = '~';
+                System.out.println("Placing ship " + (placedShips + 1) + " of size " + SHIP_SIZE);
+                System.out.println("Choose direction (W: Up, A: Left, S: Down, D: Right) to place from (" + currentRow + ", " + currentCol + "): ");
+                char direction = scanner.next().charAt(0);
 
-                    switch (move) {
-                        case 'w': currentRow = Math.max(0, currentRow - 1); break;
-                        case 'a': currentCol = Math.max(0, currentCol - 1); break;
-                        case 's': currentRow = Math.min(SIZE - 1, currentRow + 1); break;
-                        case 'd': currentCol = Math.min(SIZE - 1, currentCol + 1); break;
-                        case 'r': horizontal = !horizontal; break;
-                        case 't': // Enter key
-                        case '\r': // Enter key on some systems
-                        case ' ': // Space key for convenience
-                            valid = isValidPlacement(ships, currentRow, currentCol, size, horizontal);
-                            if (valid) {
-                                placeShip(ships, board, currentRow, currentCol, size, horizontal);
-                                placed = true;
-                            } else {
-                                System.out.println("Invalid placement. Try again.");
-                            }
-                            break;
-                        default:
-                            System.out.println("Invalid move. Use WASD to move, Enter to place, R to rotate.");
-                            break;
+                int endRow = currentRow;
+                int endCol = currentCol;
+
+                switch (direction) {
+                    case 'w': endRow = currentRow - SHIP_SIZE + 1; break;
+                    case 'a': endCol = currentCol - SHIP_SIZE + 1; break;
+                    case 's': endRow = currentRow + SHIP_SIZE - 1; break;
+                    case 'd': endCol = currentCol + SHIP_SIZE - 1; break;
+                    default:
+                        System.out.println("Invalid direction. Use WASD to move.");
+                        continue;
+                }
+
+                if (endRow < 0 || endRow >= SIZE || endCol < 0 || endCol >= SIZE) {
+                    System.out.println("Invalid placement. Ship goes out of bounds.");
+                    continue;
+                }
+
+                for (int i = 0; i < SHIP_SIZE; i++) {
+                    int r = currentRow;
+                    int c = currentCol;
+                    switch (direction) {
+                        case 'w': r -= i; break;
+                        case 'a': c -= i; break;
+                        case 's': r += i; break;
+                        case 'd': c += i; break;
                     }
+                    if (r < 0 || r >= SIZE || c < 0 || c >= SIZE || ships[r][c]) {
+                        validPlacement = false;
+                        break;
+                    }
+                }
+
+                if (validPlacement) {
+                    for (int i = 0; i < SHIP_SIZE; i++) {
+                        int r = currentRow;
+                        int c = currentCol;
+                        switch (direction) {
+                            case 'w': r -= i; break;
+                            case 'a': c -= i; break;
+                            case 's': r += i; break;
+                            case 'd': c += i; break;
+                        }
+                        ships[r][c] = true;
+                        board[r][c] = 'S';
+                    }
+                    placed = true;
+                    placedShips++;
+                    printBoard(board);
+                } else {
+                    System.out.println("Invalid placement. Overlapping with another ship or out of bounds.");
                 }
             }
         }
     }
 
-    public static void placeShipsRandomly(boolean[][] ships, int[] shipSizes) {
+    public static void placeShipsRandomly(boolean[][] ships, int numberOfShips) {
         Random rand = new Random();
-        for (int size : shipSizes) {
+        int placedShips = 0;
+
+        while (placedShips < numberOfShips) {
             boolean placed = false;
             while (!placed) {
                 int row = rand.nextInt(SIZE);
                 int col = rand.nextInt(SIZE);
-                boolean horizontal = rand.nextBoolean();
-                if (isValidPlacement(ships, row, col, size, horizontal)) {
-                    placeShip(ships, null, row, col, size, horizontal);
-                    placed = true;
+                int direction = rand.nextInt(4); // 0: up, 1: left, 2: down, 3: right
+                int endRow = row;
+                int endCol = col;
+                boolean validPlacement = true;
+
+                switch (direction) {
+                    case 0: endRow = row - SHIP_SIZE + 1; break;
+                    case 1: endCol = col - SHIP_SIZE + 1; break;
+                    case 2: endRow = row + SHIP_SIZE - 1; break;
+                    case 3: endCol = col + SHIP_SIZE - 1; break;
                 }
-            }
-        }
-    }
 
-    public static boolean isValidPlacement(boolean[][] ships, int row, int col, int size, boolean horizontal) {
-        if (horizontal) {
-            if (col + size > SIZE) return false;
-            for (int i = col; i < col + size; i++) {
-                if (ships[row][i]) return false;
-            }
-        } else {
-            if (row + size > SIZE) return false;
-            for (int i = row; i < row + size; i++) {
-                if (ships[i][col]) return false;
-            }
-        }
-        return true;
-    }
+                if (endRow < 0 || endRow >= SIZE || endCol < 0 || endCol >= SIZE) {
+                    validPlacement = false;
+                } else {
+                    for (int i = 0; i < SHIP_SIZE; i++) {
+                        int r = row;
+                        int c = col;
+                        switch (direction) {
+                            case 0: r -= i; break;
+                            case 1: c -= i; break;
+                            case 2: r += i; break;
+                            case 3: c += i; break;
+                        }
+                        if (r < 0 || r >= SIZE || c < 0 || c >= SIZE || ships[r][c]) {
+                            validPlacement = false;
+                            break;
+                        }
+                    }
+                }
 
-    public static void placeShip(boolean[][] ships, char[][] board, int row, int col, int size, boolean horizontal) {
-        if (horizontal) {
-            for (int i = col; i < col + size; i++) {
-                ships[row][i] = true;
-                if (board != null) board[row][i] = 'S';
-            }
-        } else {
-            for (int i = row; i < row + size; i++) {
-                ships[i][col] = true;
-                if (board != null) board[i][col] = 'S';
+                if (validPlacement) {
+                    for (int i = 0; i < SHIP_SIZE; i++) {
+                        int r = row;
+                        int c = col;
+                        switch (direction) {
+                            case 0: r -= i; break;
+                            case 1: c -= i; break;
+                            case 2: r += i; break;
+                            case 3: c += i; break;
+                        }
+                        ships[r][c] = true;
+                    }
+                    placed = true;
+                    placedShips++;
+                }
             }
         }
     }
 
     public static void printBoard(char[][] board) {
-        System.out.print("  ");
+        System.out.print(" ");
         for (int i = 0; i < SIZE; i++) {
             System.out.print(i + " ");
         }
-        System.out.println();
-        for (int i = 0; i < SIZE; i++) {
-            System.out.print(i + " ");
-            for (int j = 0; j < SIZE; j++) {
-                System.out.print(board[i][j] + " ");
-            }
-            System.out.println();
-        }
-    }
-
-    public static void printBoardHidden(char[][] board) {
-        System.out.print("  ");
-        for (int i = 0; i < SIZE; i++) {
-            System.out.print(i + " ");
-        }
-        System.out.println();
-        for (int i = 0; i < SIZE; i++) {
-            System.out.print(i + " ");
-            for (int j = 0; j < SIZE; j++) {
-                if (board[i][j] == 'X' || board[i][j] == 'O') {
-                    System.out.print(board[i][j] + " ");
-                } else {
-                    System.out.print("~ ");
-                }
-            }
-            System.out.println();
-        }
-    }
-}
+        System.out
